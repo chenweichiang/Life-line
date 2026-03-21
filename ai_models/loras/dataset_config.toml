@@ -1,0 +1,11 @@
+[general]
+enable_bucket = true
+bucket_no_upscale = true
+
+[[datasets]]
+resolution = 1024
+batch_size = 1
+
+  [[datasets.subsets]]
+  image_dir = "/Users/chenweichiang/Documents/Developer/life_line/ai_models/loras/dataset/img/1_lifeline"
+  num_repeats = 40

@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  engine_rust:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.rust
+    container_name: life_line_engine
+    volumes:
+      - ../engine_rust:/app
+      - ../ai_models:/ai_models
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    # 允許使用本機顯示卡與 X11/Wayland 介面
+    environment:
+      - DISPLAY=$DISPLAY
+      - WAYLAND_DISPLAY=$WAYLAND_DISPLAY
+      - XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
+    privileged: true
+    network_mode: host
+    tty: true
+
+  api_vision:
+    build:
+      context: ../api_vision_python
+      dockerfile: ../docker/Dockerfile.vision
+    container_name: life_line_vision_ai
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ../ai_models:/models
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+    tty: true
+
+  api_audio:
+    build:
+      context: ../api_audio_python
+      dockerfile: ../docker/Dockerfile.audio
+    container_name: life_line_audio_ai
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ../ai_models:/models
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+    tty: true

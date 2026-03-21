@@ -1,0 +1,27 @@
+# Rust
+target/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv*/
+.env
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Logs
+*.log
+
+# Heavy AI Models & Submodules
+ai_models/kohya_ss/
+ai_models/loras/dataset/
+ai_models/loras/output/
+*.safetensors
+*.ckpt
+*.pt
+*.bin
