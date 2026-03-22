@@ -20,10 +20,9 @@ Icon
 # Heavy AI Models & Submodules
 ai_models/kohya_ss/
 ai_models/loras/dataset/
-ai_models/loras/output/
 ai_models/base_models/
 ai_models/audio_models/
-*.safetensors
+# *.safetensors — 改用 Git LFS 追蹤
 *.ckpt
 *.pt
 *.bin
