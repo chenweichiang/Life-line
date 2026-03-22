@@ -3,6 +3,25 @@
 ## 專案概述 (Project Overview)
 「Life Line」是一個即時互動的科技藝術裝置，結合 **AI 影像生成**與 **粒子物理引擎**，將 AI 生成的畫作轉化為可互動的「活的畫布」——數十萬粒子隨著滑鼠與有機流場四處流動。
 
+## 系統需求 (System Requirements)
+
+| 項目 | 最低需求 | 建議配置 |
+|------|---------|---------|
+| **作業系統** | macOS 13+ (Ventura) | macOS 14+ (Sonoma) |
+| **處理器** | Apple M1 | Apple M4 Max |
+| **統一記憶體** | 16GB | 36GB+ |
+| **GPU** | Metal 支援（M 系列內建） | Metal 3（M4 系列） |
+| **磁碟空間** | 15GB（模型 + 基底） | 30GB+（含訓練資料集） |
+| **Python** | 3.10+ | 3.11 |
+| **Rust** | 1.75+ | 最新 stable |
+| **Git LFS** | 必須（模型 435MB） | — |
+
+> [!NOTE]
+> - SDXL 基底模型載入約需 **6GB 記憶體**，推論時峰值約 **10GB**
+> - 粒子引擎在 `GRID_STEP=1` 時會生成 **百萬級粒子**，需要 Metal GPU 加速
+> - 目前僅支援 **Apple Silicon Mac**（MPS 後端），NVIDIA GPU 需修改 `main.py` 改用 CUDA
+> - Windows / Linux 使用者需改用 Docker 部署（參考 `docker/` 目錄）
+
 ## 系統架構 (System Architecture)
 
 ```mermaid
