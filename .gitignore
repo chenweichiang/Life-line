@@ -39,3 +39,4 @@ Cargo.lock
 
 # Test scripts
 test_*.py
+build/
