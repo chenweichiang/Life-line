@@ -194,7 +194,18 @@ Lifeline LoRA 學到的核心視覺特徵：
 
 ## 快速開始 (Getting Started)
 
-### 1. 啟動 Vision API
+### 方法一：一鍵安裝（推薦）
+```bash
+git clone https://github.com/chenweichiang/Life-line.git
+cd Life-line
+git lfs pull          # 下載 AI 模型（435MB）
+./install.sh          # 自動安裝所有依賴 + 編譯 App
+./run.sh              # 啟動 AI 後端 + SwiftUI App
+```
+
+### 方法二：手動啟動
+
+#### 1. 啟動 Vision API
 ```bash
 cd api_vision_python
 source .venv/bin/activate
@@ -202,7 +213,15 @@ uvicorn main:app --port 8001
 # 等待 "✅ SDXL + LoRA model ready!" 出現
 ```
 
-### 2. 啟動粒子引擎
+#### 2. 啟動 SwiftUI App
+```bash
+cd app_macos
+swift run            # 開發模式
+# 或
+swift build -c release && .build/release/LifeLine  # Release 模式
+```
+
+#### 3. 啟動粒子引擎（可選）
 ```bash
 source $HOME/.cargo/env
 cd engine_rust

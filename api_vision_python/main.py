@@ -26,6 +26,9 @@ class EmotionVector(BaseModel):
     color_tone: str
     flow: str
     custom_prompt: str = ""  # 自訂 prompt（留空則自動組合）
+    lora_scale: float = 0.4  # LoRA 影響力（0.0~1.0）
+    num_steps: int = 0       # 推論步數（0=自動計算）
+    guidance_scale: float = 0.0  # Guidance（0=自動計算）
 
 
 # === 載入 SDXL + LoRA 模型 ===
@@ -110,21 +113,26 @@ def ai_generation(vector: EmotionVector) -> str:
 
     negative_prompt = "photorealistic, 3d render, text, watermark, blurry, low quality"
 
-    # 推論步數隨強度動態調整
-    num_steps = int(15 + vector.intensity * 15)  # 15~30 步
+    # 推論步數：使用者指定 > 自動計算
+    num_steps = vector.num_steps if vector.num_steps > 0 else int(15 + vector.intensity * 15)
+    # Guidance scale：使用者指定 > 自動計算
+    guidance = vector.guidance_scale if vector.guidance_scale > 0 else 7.0 + vector.intensity * 3.0
+    # LoRA scale
+    lora_scale = max(0.0, min(1.0, vector.lora_scale))
 
     print(f"🎲 Seed: {seed}")
-    print(f"🎨 Generating with prompt: {base_prompt[:100]}...")
+    print(f"🎨 Prompt: {base_prompt[:80]}...")
+    print(f"⚙️ Steps: {num_steps} | Guidance: {guidance:.1f} | LoRA: {lora_scale:.2f}")
 
     image = pipe(
         prompt=base_prompt,
         negative_prompt=negative_prompt,
         num_inference_steps=num_steps,
-        guidance_scale=7.0 + vector.intensity * 3.0,  # 7~10
+        guidance_scale=guidance,
         width=1024,
         height=1024,
         generator=generator,
-        cross_attention_kwargs={"scale": 0.4},  # 降低 LoRA 影響力，釋放構圖多樣性
+        cross_attention_kwargs={"scale": lora_scale},
     ).images[0]
 
     # 轉 Base64
