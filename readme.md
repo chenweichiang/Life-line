@@ -5,27 +5,32 @@
 
 ## 系統架構 (System Architecture)
 
-```
-┌──────────────────────────────────────────────────┐
-│                  Life Line 系統                    │
-├──────────────────────────────────────────────────┤
-│                                                    │
-│  ┌──────────────┐  HTTP POST   ┌──────────────┐  │
-│  │  Rust 引擎    │◄────────────►│ Vision API    │  │
-│  │  (Bevy + GPU) │  Base64 JPG  │ (Python/SDXL) │  │
-│  │  Port: 本機    │              │ Port: 8001    │  │
-│  └──────────────┘              └──────────────┘  │
-│       │                              │            │
-│  粒子物理引擎                   SDXL + LoRA       │
-│  滑鼠互動/流場                  影像生成           │
-│                                                    │
-│  ┌──────────────┐              ┌──────────────┐  │
-│  │ source images │              │  ai_models/   │  │
-│  │ (原始素材)     │              │  loras/output │  │
-│  └──────────────┘              │  Lifeline.    │  │
-│                                │  safetensors  │  │
-│                                └──────────────┘  │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph 使用者互動
+        Mouse["🖱️ 滑鼠互動"]
+    end
+
+    subgraph Rust["Rust 粒子引擎 (Bevy + Metal GPU)"]
+        Engine["粒子物理系統\n流場動畫\n即時渲染"]
+    end
+
+    subgraph Python["Vision API (Python :8001)"]
+        SDXL["SDXL 基底模型"]
+        LoRA["Lifeline LoRA\n(safetensors)"]
+        SDXL --> |融合| LoRA
+    end
+
+    subgraph 素材
+        Source["source images/\n原始視覺素材"]
+        Models["ai_models/\nLoRA 權重"]
+    end
+
+    Mouse --> Engine
+    Engine -->|"POST /generate_vision\n(EmotionVector)"| Python
+    Python -->|"Base64 JPEG\n1024×1024"| Engine
+    Models --> LoRA
+    Source -.->|"Procedural\nFallback"| Python
 ```
 
 ### 元件說明
