@@ -1,23 +1,239 @@
 # Project Life Line
 
 ## 專案概述 (Project Overview)
-「Life Line」是一個專注於視覺與互動科技藝術創作的專案。本專案從視覺藝術、科技藝術以及視覺設計的跨域視角出發，探索美學與程式邏輯的交匯點。專注於即時渲染、演算法生成以及與觀者的互動體驗。
+「Life Line」是一個即時互動的科技藝術裝置，結合 **AI 影像生成**與 **粒子物理引擎**，將 AI 生成的畫作轉化為可互動的「活的畫布」——數十萬粒子隨著滑鼠與有機流場四處流動。
 
-## 藝術與設計理念 (Art & Design Philosophy)
-本專案的內容建構在深厚的視覺藝術基礎上。我們不僅是寫程式，更是在進行數位媒材的雕塑。
-1. **視覺藝術視角**：著重於畫面的構成、色彩的張力與情感的傳遞。所有的基礎圖形（存放於 `source images` 目錄中）皆為創作的起點與靈感來源。
-2. **科技藝術視角**：利用程式碼的生成與演算法，賦予靜態圖形動態的生命力與互動性，展現科技的詩意。
-3. **設計藝術視角**：將視覺藝術的感性收斂為系統化的設計語言，確保互動體驗的流暢度與美學的一致性。
+## 系統架構 (System Architecture)
 
-## 技術架構 (Technology Stack)
-- **核心語言**：[Rust](https://www.rust-lang.org/)。選擇 Rust 是為了確保即時視覺渲染與互動的高效能與記憶體安全性，適合處理複雜的粒子系統或著色器運算。
-- **運行環境**：Docker。為了確保跨平台的一致性與實驗環境的純淨度，所有的程式開發、實驗與內容生成皆於本機電腦的 Docker 容器中進行。
+```
+┌──────────────────────────────────────────────────┐
+│                  Life Line 系統                    │
+├──────────────────────────────────────────────────┤
+│                                                    │
+│  ┌──────────────┐  HTTP POST   ┌──────────────┐  │
+│  │  Rust 引擎    │◄────────────►│ Vision API    │  │
+│  │  (Bevy + GPU) │  Base64 JPG  │ (Python/SDXL) │  │
+│  │  Port: 本機    │              │ Port: 8001    │  │
+│  └──────────────┘              └──────────────┘  │
+│       │                              │            │
+│  粒子物理引擎                   SDXL + LoRA       │
+│  滑鼠互動/流場                  影像生成           │
+│                                                    │
+│  ┌──────────────┐              ┌──────────────┐  │
+│  │ source images │              │  ai_models/   │  │
+│  │ (原始素材)     │              │  loras/output │  │
+│  └──────────────┘              │  Lifeline.    │  │
+│                                │  safetensors  │  │
+│                                └──────────────┘  │
+└──────────────────────────────────────────────────┘
+```
+
+### 元件說明
+
+| 元件 | 路徑 | 技術 | 功能 |
+|------|------|------|------|
+| **Rust 粒子引擎** | `engine_rust/` | Bevy + Metal GPU | 即時粒子渲染、滑鼠互動、有機流場 |
+| **Vision AI API** | `api_vision_python/` | FastAPI + SDXL + LoRA | AI 影像生成，回傳 Base64 JPEG |
+| **Audio API** | `api_audio_python/` | FastAPI + Kira | 程序化音頻生成（目前暫停） |
+| **AI 模型** | `ai_models/` | Kohya LoRA 訓練 | 訓練好的 Lifeline.safetensors |
+| **Docker** | `docker/` | Docker Compose | 容器化部署環境 |
+| **原始素材** | `source images/` | JPG | 藝術創作的視覺基底素材 |
+
+---
+
+## AI 生圖系統 (Vision AI Generation)
+
+### 模型配置
+- **基底模型**：`stabilityai/stable-diffusion-xl-base-1.0` (SDXL)
+- **LoRA 權重**：`ai_models/loras/output/Lifeline.safetensors`
+- **LoRA Scale**：`0.4`（降低以釋放構圖多樣性，1.0 會過度強制波浪線條風格）
+- **推論後端**：Apple MPS (Metal Performance Shaders)
+- **輸出尺寸**：1024×1024
+- **推論步數**：15~30 步（隨 intensity 動態調整）
+- **Guidance Scale**：7.0~10.0（隨 intensity 動態調整）
+
+### API 端點
+
+```
+POST http://127.0.0.1:8001/generate_vision
+```
+
+#### 請求參數 (EmotionVector)
+
+| 參數 | 型別 | 範圍 | 說明 |
+|------|------|------|------|
+| `intensity` | float | 0.0~1.0 | 影響推論步數和 guidance scale |
+| `color_tone` | string | `warm` / `cool` / `earthy` | 預設模式的色調選擇 |
+| `flow` | string | `chaotic` / `calm` | 預設模式的動態風格 |
+| `custom_prompt` | string | 任意文字（可留空） | **自訂 prompt（最重要的參數）** |
+
+### Prompt 工程指南 (Prompt Engineering Guide)
+
+#### 觸發詞
+所有 prompt 都會自動加上 `lifeline_art_style,` 前綴。這是 LoRA 訓練時的觸發詞。
+
+#### LoRA 風格特徵
+Lifeline LoRA 學到的核心視覺特徵：
+- **有機流動線條**：波浪狀、流線形的線條是最強的 DNA
+- **中心對稱構圖**：傾向從中心向外擴散
+- **剪紙/浮雕質感**：線條有厚度和層次
+
+#### 有效的 Prompt 策略
+
+##### ✅ 能產生好結果的用語
+| 類型 | 有效用語範例 | 效果 |
+|------|------------|------|
+| **多色衝撞** | `fragments of ruby red cobalt blue emerald green and golden amber` | 單張圖多色混搭 |
+| **自然現象** | `volcanic delta`, `wildfire`, `coral reef`, `aurora` | 產生有機且生動的構圖 |
+| **材質模擬** | `oxidized copper`, `rust patina`, `woven textile` | 突破波浪線條的框架 |
+| **爆裂/碎裂** | `shattered glass`, `explosion`, `fragments flying outward` | 打破中心對稱 |
+| **對比衝突** | `magma meets glacial ice`, `fire vs forest` | 同畫面內的雙元素對決 |
+| **具體色彩名** | `turquoise`, `vermillion`, `cobalt blue`, `saffron yellow` | 比抽象色調更精確 |
+
+##### ❌ 效果不佳的用語
+| 類型 | 避免用語 | 原因 |
+|------|---------|------|
+| **水平帶狀** | `horizontal layers`, `landscape bands` | LoRA 會將其扭曲成波浪 |
+| **同心圓** | `concentric rings`, `circular pattern` | 被拉成中心對稱的拉花 |
+| **極簡留白** | `minimal`, `single line`, `empty space` | LoRA 傾向填滿整個畫面 |
+| **網格/節點** | `network`, `grid`, `nodes and edges` | 無法突破曲線的限制 |
+| **寫實題材** | `photorealistic`, `mountain`, `cityscape` | LoRA 風格太強會蓋掉 |
+
+##### 🎯 Prompt 範本（已驗證的高品質配方）
+
+```python
+# 🔥 爆裂碎片 — 非對稱動態（高評分）
+"explosive radial burst from center, sharp angular fragments, turquoise coral and gold on charcoal, broken glass mosaic"
+
+# 🌈 稜鏡光譜 — 全彩繽紛（高評分）
+"shattered glass prism refracting light into vivid rainbow spectrum, sharp angular shards of red orange yellow green blue violet on jet black"
+
+# 🗺️ 地形迷宮 — 密集結構（高評分）
+"aerial topographic map, contour lines of varying thickness, alternating bands of deep indigo and bright saffron yellow"
+
+# 🎪 撕裂拼貼 — 大膽撞色（高評分）
+"torn paper collage with rough edges, overlapping layers: newspaper print, solid vermillion, striped teal, dadaist assemblage"
+
+# 🐚 珊瑚礁斷面 — 有機混色
+"cross-section of coral reef, coral pink and tangerine polyps among indigo and jade green sea structures, dense organic complexity"
+
+# 🔥🌲 野火地圖 — 衝突構圖
+"satellite view of wildfire, intense red-orange flame fronts, black charred zones, untouched emerald green forest"
+
+# 💎 彩色玻璃碎裂 — 多色聚合
+"stained glass window being shattered, fragments of ruby red cobalt blue emerald green and golden amber, sacred geometry"
+
+# 🦑 銅鏽銹蝕 — 材質突破
+"extreme macro of oxidized copper surface, vivid verdigris turquoise patches against raw burnt copper orange, chemical reaction"
+```
+
+#### 隨機修飾詞系統
+每次生成會從以下 12 個修飾詞中隨機抽取 2 個，增加同一 prompt 的變化：
+- `dense layered textures` / `ethereal transparent washes`
+- `bold impasto strokes` / `delicate ink-like lines`
+- `deep saturated pigments` / `luminous translucent layers`
+- `raw expressive marks` / `meditative repetitive patterns`
+- `dramatic chiaroscuro` / `soft diffused atmosphere`
+- `fractured geometric forms` / `fluid watercolor bleeding`
+
+#### Negative Prompt
+固定使用：`photorealistic, 3d render, text, watermark, blurry, low quality`
+
+---
+
+## Rust 粒子引擎 (Particle Engine)
+
+### 核心參數
+
+| 參數 | 目前值 | 說明 |
+|------|--------|------|
+| `GRID_STEP` | 1 | 像素取樣密度（1=每個像素一粒子） |
+| 排斥半徑 | 50.0 | 滑鼠互動的影響範圍 |
+| 排斥力 | 2000.0 | 滑鼠推開粒子的力量 |
+| Z 彈力 | 800.0 | 粒子被推開後的 Z 軸反彈 |
+| 流場振幅 | 80.0 / 60.0 | X/Y 方向的有機流動強度 |
+| 阻尼 | 0.98 | 速度衰減（越接近 1 越滑順） |
+| 復原力 | 1.0 | 拉回目標位置的力道 |
+| 漂移強度 | 30.0 / 20.0 | 目標位置隨時間飄移的幅度 |
+
+### 運作流程
+1. 啟動時呼叫 Vision API 取得 AI 生成圖
+2. 將圖解析為 RGB 像素資料
+3. 每個像素建立一個 3D 粒子（位置 = 像素座標，顏色 = RGB）
+4. Update 迴圈：
+   - 計算有機流場（多層正弦波疊加）
+   - 處理滑鼠互動（排斥力場）
+   - 更新粒子位置 + 阻尼
+   - 同步到 Bevy Mesh
+
+---
+
+## 快速開始 (Getting Started)
+
+### 1. 啟動 Vision API
+```bash
+cd api_vision_python
+source .venv/bin/activate
+uvicorn main:app --port 8001
+# 等待 "✅ SDXL + LoRA model ready!" 出現
+```
+
+### 2. 啟動粒子引擎
+```bash
+source $HOME/.cargo/env
+cd engine_rust
+cargo run --release
+```
+
+### 3. 批次生圖測試
+```python
+import requests, base64
+payload = {
+    "intensity": 0.85,
+    "color_tone": "warm",
+    "flow": "chaotic",
+    "custom_prompt": "你的自訂 prompt"
+}
+r = requests.post("http://127.0.0.1:8001/generate_vision", json=payload)
+with open("output.jpg", "wb") as f:
+    f.write(base64.b64decode(r.json()["image_base64"]))
+```
+
+---
 
 ## 目錄結構 (Directory Structure)
-- `source images/`：存放專案基底的視覺圖形素材，是接下來生成與互動演算的基礎。請勿隨意刪除或修改這些原始素材，它們是視覺藝術層面的根基。
-- *(其他目錄將隨著後續 AI 協作與開發進度陸續建立)*
+```
+life_line/
+├── readme.md              # 本文件
+├── agents.md              # AI 協作通用指南
+├── gemini.md              # Gemini 專屬創作協議
+├── source images/         # 原始圖形素材（不可刪除）
+├── ai_models/
+│   └── loras/output/
+│       └── Lifeline.safetensors  # 訓練好的 LoRA 權重
+├── ai_output/             # AI 生成的圖檔輸出
+│   ├── batch10/           # 第一批 10 張
+│   ├── batch_diverse/     # 配色多樣化批次
+│   ├── batch_v3/          # 極端構圖批次
+│   └── batch_v4/          # 最新批次（推薦參考）
+├── api_vision_python/
+│   ├── main.py            # Vision AI API 主程式
+│   └── .venv/             # Python 虛擬環境
+├── api_audio_python/
+│   └── main.py            # Audio API（暫停使用）
+├── engine_rust/
+│   ├── src/main.rs        # 粒子引擎核心
+│   ├── src/render_system.rs
+│   └── Cargo.toml
+└── docker/
+    ├── docker-compose.yml
+    ├── Dockerfile.vision
+    ├── Dockerfile.rust
+    └── train_lora.sh       # LoRA 訓練腳本
+```
 
-## 開發指南 (Getting Started)
-此專案高度依賴 AI 代理（AI Agents）的協作。請參閱以下文件以了解開發規範：
-- `agents.md`：通用 AI 協作指南與開發原則。
-- `gemini.md`：專為 Gemini AI 設計的對話、思考與創作協議。
+## 開發指南 (Dev Guidelines)
+- 必須使用**台灣繁體中文**溝通
+- 所有視覺參數命名需具**語意直覺性**（如 `base_color_intensity`）
+- 遵循 Rust `cargo fmt` 和 `clippy` 標準
+- 請參閱 `agents.md` 和 `gemini.md` 了解完整 AI 協作協議

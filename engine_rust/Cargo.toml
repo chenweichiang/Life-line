@@ -7,9 +7,11 @@ edition = "2021"
 bevy = "0.13"            # 3D 引擎 
 wgpu = "0.19"            # GPU Shader 處理
 kira = "0.8"             # 音訊播放
-reqwest = { version = "0.11", features = ["json"] } # AI API 客戶端
+reqwest = { version = "0.11", features = ["blocking", "json"] } # AI API 客戶端
 tokio = { version = "1.36", features = ["full"] }   # 非同步執行緒
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 bytemuck = { version = "1.14", features = ["derive"] }
 rand = "0.8"
+image = "0.24"
+base64 = "0.21"

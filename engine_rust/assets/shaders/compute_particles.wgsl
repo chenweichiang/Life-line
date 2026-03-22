@@ -1,9 +1,15 @@
+// Life Line — GPU Compute Shader (100 萬粒子物理模擬)
+// 每個 workgroup 處理 64 個粒子
+
 struct Particle {
     pos: vec3<f32>,
+    _pad1: f32,
     vel: vec3<f32>,
+    _pad2: f32,
     color: vec4<f32>,
-    target_pos: vec3<f32>, // 從 AI 影像取得的目標還原位置
-    target_color: vec4<f32>, // 從 AI 影像取得的目標顏色
+    target_pos: vec3<f32>,
+    _pad3: f32,
+    target_color: vec4<f32>,
 };
 
 struct SimParams {
@@ -27,32 +33,36 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
     var p = particles[index];
 
-    // 1. 滑鼠排斥力 (Mouse Repulsion)
+    // 1. 滑鼠排斥力
     if (params.mouse_active == 1u) {
-        let dir = p.pos - params.mouse_pos;
-        let dist = length(dir);
-        if (dist < params.repulsion_radius && dist > 0.01) {
+        let dx = p.pos.x - params.mouse_pos.x;
+        let dy = p.pos.y - params.mouse_pos.y;
+        let dist_sq = dx * dx + dy * dy;
+        let radius_sq = params.repulsion_radius * params.repulsion_radius;
+
+        if (dist_sq < radius_sq && dist_sq > 0.0001) {
+            let dist = sqrt(dist_sq);
             let force = (params.repulsion_radius - dist) / params.repulsion_radius;
-            // 距離越近，排斥力越強
-            p.vel += normalize(dir) * force * params.repulsion_force * params.delta_time;
+            let inv_dist = 1.0 / dist;
+            p.vel.x += dx * inv_dist * force * params.repulsion_force * params.delta_time;
+            p.vel.y += dy * inv_dist * force * params.repulsion_force * params.delta_time;
+            p.vel.z += force * 80.0 * params.delta_time;
         }
     }
 
-    // 2. 復原力 (Recovery back to actual image structure)
+    // 2. 復原力
     let to_target = p.target_pos - p.pos;
-    let dist_to_target = length(to_target);
-    if (dist_to_target > 0.0) {
-        // 向目標位置的拉力，讓被推開的粒子會慢慢彈回原本的形狀
+    let dist_sq_target = dot(to_target, to_target);
+    if (dist_sq_target > 0.01) {
         p.vel += to_target * params.recovery_force * params.delta_time;
     }
 
-    // 3. 阻力與速度更新
-    p.vel *= 0.95; // 阻尼 Damping
+    // 3. 阻尼 + 位移
+    p.vel *= 0.92;
     p.pos += p.vel * params.delta_time;
 
-    // 4. 更新顏色 (漸變至新的目標顏色)
+    // 4. 顏色漸變
     p.color = mix(p.color, p.target_color, 2.0 * params.delta_time);
 
-    // 寫回 Buffer
     particles[index] = p;
 }

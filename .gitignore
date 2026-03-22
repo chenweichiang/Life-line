@@ -21,7 +21,22 @@ Icon
 ai_models/kohya_ss/
 ai_models/loras/dataset/
 ai_models/loras/output/
+ai_models/base_models/
+ai_models/audio_models/
 *.safetensors
 *.ckpt
 *.pt
 *.bin
+
+# AI 生成輸出（太大不上傳）
+ai_output/
+ai_output_test.jpg
+
+# Virtual environments
+.venv/
+
+# Cargo lock (binary crate)
+Cargo.lock
+
+# Test scripts
+test_*.py
