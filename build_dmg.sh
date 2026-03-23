@@ -16,7 +16,7 @@ APP_DIR="$BUILD_DIR/LifeLine.app"
 CONTENTS="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS/MacOS"
 RESOURCES="$CONTENTS/Resources"
-DMG_NAME="LifeLine-v1.0.0"
+DMG_NAME="LifeLine-v1.1.0"
 DMG_PATH="$BUILD_DIR/$DMG_NAME.dmg"
 
 # 清理
@@ -69,9 +69,9 @@ cat > "$CONTENTS/Info.plist" << 'PLIST'
     <key>CFBundleDisplayName</key>
     <string>Life Line — AI 藝術生成器</string>
     <key>CFBundleVersion</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
