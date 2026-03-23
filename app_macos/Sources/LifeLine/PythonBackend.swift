@@ -133,15 +133,17 @@ class PythonBackend: ObservableObject {
         var checkCount = 0
 
         healthCheckTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] timer in
-            checkCount += 1
-            self?.checkHealth { isRunning in
-                Task { @MainActor in
-                    if isRunning {
-                        timer.invalidate()
-                        self?.status = .ready
-                        self?.statusDetail = "模型已就緒，可以開始創作"
-                    } else {
-                        self?.statusDetail = "載入模型中...(\(checkCount * 2)秒)"
+            Task { @MainActor in
+                checkCount += 1
+                self?.checkHealth { isRunning in
+                    Task { @MainActor in
+                        if isRunning {
+                            timer.invalidate()
+                            self?.status = .ready
+                            self?.statusDetail = "模型已就緒，可以開始創作"
+                        } else {
+                            self?.statusDetail = "載入模型中...(\(checkCount * 2)秒)"
+                        }
                     }
                 }
             }

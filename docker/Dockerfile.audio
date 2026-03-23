@@ -1,10 +1,12 @@
-FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime
+FROM python:3.10-slim
 
 WORKDIR /app
 
+# 安裝系統層依賴 (ffmpeg, numpy 需要的基礎庫)
+RUN apt-get update && apt-get install -y ffmpeg libsndfile1 && rm -rf /var/lib/apt/lists/*
+
 # 安裝 Python 依賴
 COPY requirements.txt .
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 啟動 FastAPI

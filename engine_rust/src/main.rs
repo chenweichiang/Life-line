@@ -290,3 +290,81 @@ fn generate_test_points() -> (Vec<[f32; 3]>, Vec<[f32; 4]>) {
     }
     (positions, colors)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use image::{RgbaImage, DynamicImage};
+    use serde_json::json;
+
+    #[test]
+    fn test_emotion_vector_serialization() {
+        let ev = EmotionVector {
+            intensity: 0.8,
+            color_tone: "warm".to_string(),
+            flow: "chaotic".to_string(),
+        };
+        let j = serde_json::to_string(&ev).unwrap();
+        assert!(j.contains(r#""intensity":0.8"#));
+        assert!(j.contains(r#""color_tone":"warm""#));
+        assert!(j.contains(r#""flow":"chaotic""#));
+    }
+
+    #[test]
+    fn test_vision_response_deserialization() {
+        let j = json!({
+            "image_base64": "SGVsbG8=",
+            "prompt": "Test Prompt"
+        });
+        let vr: VisionResponse = serde_json::from_value(j).unwrap();
+        assert_eq!(vr.image_base64, "SGVsbG8=");
+        assert_eq!(vr.prompt, "Test Prompt");
+    }
+
+    #[test]
+    fn test_generate_test_points() {
+        let (positions, colors) = generate_test_points();
+        // 100 * 120 = 12000 點
+        assert_eq!(positions.len(), 12000);
+        assert_eq!(colors.len(), 12000);
+        
+        // 確保範圍與顏色格式正確
+        let first_pos = positions[0];
+        assert!(first_pos[0] >= -30.0 && first_pos[0] <= 30.0); // 因為 x 範圍是 -60 到 60，乘以 0.5
+        
+        let first_color = colors[0];
+        assert!(first_color[3] == 1.0); // Alpha 應該為 1.0
+    }
+
+    #[test]
+    fn test_image_to_points_black_ignored() {
+        // 建立 4x4 的全黑影像
+        let img = RgbaImage::new(4, 4);
+        let dynamic_img = DynamicImage::ImageRgba8(img);
+        
+        let (pos, _colors) = image_to_points(&dynamic_img);
+        // 全黑點應該被忽略
+        assert_eq!(pos.len(), 0);
+    }
+
+    #[test]
+    fn test_image_to_points_colors_parsed() {
+        // 建立包含色彩的影像
+        let mut img = RgbaImage::new(2, 2);
+        img.put_pixel(0, 0, image::Rgba([255, 128, 64, 255]));
+        img.put_pixel(1, 1, image::Rgba([10, 10, 10, 255])); // 黑點應忽略（<30）
+        
+        let dynamic_img = DynamicImage::ImageRgba8(img);
+        let (pos, colors) = image_to_points(&dynamic_img);
+        
+        assert_eq!(pos.len(), 1); // 只有一個非黑點
+        assert_eq!(colors.len(), 1);
+        
+        // 檢查顏色正規化 (R: 255/255=1.0, G: 128/255=0.5, B: 64/255=0.25)
+        let c = colors[0];
+        assert!((c[0] - 1.0).abs() < 0.01);
+        assert!((c[1] - 0.501).abs() < 0.01); // 128/255 ≒ 0.5019
+        assert!((c[2] - 0.25).abs() < 0.01); // 64/255 ≒ 0.2509
+        assert_eq!(c[3], 1.0);
+    }
+}

@@ -143,25 +143,26 @@ def ai_generation(vector: EmotionVector) -> str:
 
 # === Procedural Fallback (保留) ===
 def procedural_generation(vector: EmotionVector) -> str:
-    """OpenCV 程序化生成 (當 AI 模型無法載入時的備援)"""
-    import cv2
+    """Numpy/SciPy 程序化生成 (當 AI 模型無法載入時的備援，無 cv2 依賴)"""
+    from scipy.ndimage import map_coordinates, gaussian_filter
 
     image_paths = glob.glob(os.path.join(SOURCE_IMAGES_DIR, "*.jpg"))
     if not image_paths:
         raise Exception("Cannot find source images.")
 
     img_path = random.choice(image_paths)
-    img = cv2.imread(img_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    h, w, _ = img.shape
+    pil_img = Image.open(img_path).convert("RGB")
+    
+    w, h = pil_img.size
     size = 1024
     if h > size and w > size:
         y = random.randint(0, h - size)
         x = random.randint(0, w - size)
-        img = img[y:y+size, x:x+size]
+        pil_img = pil_img.crop((x, y, x + size, y + size))
     else:
-        img = cv2.resize(img, (size, size))
+        pil_img = pil_img.resize((size, size), Image.Resampling.BICUBIC)
+
+    img_arr = np.array(pil_img).astype(np.float32)
 
     xs, ys = np.meshgrid(np.arange(size), np.arange(size))
     freq = 0.05 if vector.flow == "chaotic" else 0.005
@@ -173,17 +174,24 @@ def procedural_generation(vector: EmotionVector) -> str:
     x_displace = np.sin(ys * freq) * amp + x_noise
     y_displace = np.cos(xs * freq) * amp + y_noise
 
-    map_x = np.float32(xs + x_displace)
-    map_y = np.float32(ys + y_displace)
+    map_x = np.clip(xs + x_displace, 0, size - 1)
+    map_y = np.clip(ys + y_displace, 0, size - 1)
 
-    warped = cv2.remap(img, map_x, map_y, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT_101)
+    # 分別對 RGB 進行像素映射變形
+    warped_r = map_coordinates(img_arr[:, :, 0], [map_y, map_x], order=1, mode='reflect')
+    warped_g = map_coordinates(img_arr[:, :, 1], [map_y, map_x], order=1, mode='reflect')
+    warped_b = map_coordinates(img_arr[:, :, 2], [map_y, map_x], order=1, mode='reflect')
+    warped = np.stack([warped_r, warped_g, warped_b], axis=-1)
 
     if vector.intensity < 0.4:
-        warped = cv2.GaussianBlur(warped, (15, 15), 0)
+        # 模糊化以表達平靜
+        warped[:, :, 0] = gaussian_filter(warped[:, :, 0], sigma=3.0)
+        warped[:, :, 1] = gaussian_filter(warped[:, :, 1], sigma=3.0)
+        warped[:, :, 2] = gaussian_filter(warped[:, :, 2], sigma=3.0)
 
-    pil_img = Image.fromarray(warped)
+    final_img = Image.fromarray(warped.astype(np.uint8))
     buffered = BytesIO()
-    pil_img.save(buffered, format="JPEG", quality=85)
+    final_img.save(buffered, format="JPEG", quality=85)
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 

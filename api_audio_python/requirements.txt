@@ -1,4 +1,5 @@
 fastapi
 uvicorn
-torchaudio
-audiocraft
+pydantic
+numpy
+scipy

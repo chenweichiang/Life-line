@@ -1,4 +1,4 @@
-FROM rust:1.75-bookworm
+FROM rust:latest
 
 # 安裝顯示、GPU 驅動與聲音所需的依賴庫 (X11, Wayland, ALSA)
 RUN apt-get update && apt-get install -y \
