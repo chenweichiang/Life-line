@@ -150,9 +150,21 @@ if [ -d "$PROJECT_ROOT/source images" ]; then
 fi
 
 # ═══════════════════════════════════
-# 6. 建立 DMG
+# 6. 複製 App Icon
 # ═══════════════════════════════════
-echo "💿 [6/6] 建立 DMG..."
+echo "🖼️ [6/7] 複製 App 圖像..."
+ICON_SRC="$PROJECT_ROOT/app_macos/AppIcon.icns"
+if [ -f "$ICON_SRC" ]; then
+    cp "$ICON_SRC" "$RESOURCES/"
+    echo "  ✅ AppIcon.icns 複製完成"
+else
+    echo "  ⚠️ 找不到 AppIcon.icns"
+fi
+
+# ═══════════════════════════════════
+# 7. 建立 DMG
+# ═══════════════════════════════════
+echo "💿 [7/7] 建立 DMG..."
 
 # 計算 App 大小
 APP_SIZE=$(du -sm "$APP_DIR" | cut -f1)
