@@ -95,8 +95,7 @@ source .venv/bin/activate
 # 安裝依賴
 echo "  安裝 Python 套件（首次可能需要幾分鐘）..."
 pip install --quiet --upgrade pip
-pip install --quiet fastapi uvicorn torch diffusers transformers accelerate safetensors Pillow numpy opencv-python-headless
-
+pip install --quiet fastapi uvicorn torch diffusers transformers accelerate safetensors Pillow numpy scipy
 echo "  Python 環境就緒 ✅"
 deactivate
 
