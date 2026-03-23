@@ -28,6 +28,13 @@ mkdir -p "$MACOS_DIR" "$RESOURCES"
 # ═══════════════════════════════════
 echo "🔨 [1/6] 編譯 SwiftUI App..."
 cd "$PROJECT_ROOT/app_macos"
+
+# 產生 AppIcon.icns
+if [ -d "AppIcon.iconset" ]; then
+    echo "  🎨 產生 AppIcon.icns..."
+    iconutil -c icns AppIcon.iconset -o AppIcon.icns
+fi
+
 swift build -c release 2>&1 | grep -E "(Build|error|warning:)" || true
 
 BINARY="$PROJECT_ROOT/app_macos/.build/release/LifeLine"
@@ -38,6 +45,11 @@ fi
 
 cp "$BINARY" "$MACOS_DIR/"
 echo "  ✅ Binary 複製完成"
+
+if [ -f "AppIcon.icns" ]; then
+    cp "AppIcon.icns" "$RESOURCES/AppIcon.icns"
+    echo "  ✅ AppIcon 複製完成"
+fi
 
 # ═══════════════════════════════════
 # 2. 建立 Info.plist
