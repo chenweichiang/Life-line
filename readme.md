@@ -11,9 +11,18 @@
 1. 下載 `LifeLine-v1.0.0.dmg`
 2. 雙擊開啟 DMG
 3. 將 **Life Line** 拖入 **Applications** 資料夾
-4. 首次開啟：右鍵 → 打開（繞過 macOS 安全性檢查）
+4. 從 Launchpad 或 Applications 中開啟
 5. 首次啟動會自動下載 SDXL 基底模型（~6GB），需要網路連線
 6. 模型載入完成後即可輸入文字生成 AI 藝術圖
+
+### 常見問題 (FAQ)
+
+**Q: 開啟時顯示「Life Line 檔案已損毀，您應該將它丟到『垃圾桶』」？**
+A: 這是 macOS Gatekeeper 對未經 App Store 認證的開源軟體的安全保護機制（隔離屬性）。
+解決方式：打開「終端機 (Terminal)」，貼上以下指令並按 Enter 即可正常開啟：
+```bash
+xattr -cr /Applications/LifeLine.app
+```
 
 ## 系統需求 (System Requirements)
 
