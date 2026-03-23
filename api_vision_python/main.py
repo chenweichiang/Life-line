@@ -17,7 +17,13 @@ app = FastAPI(title="Life Line Vision AI (SDXL + LoRA)")
 
 # === 路徑設定 ===
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-LORA_PATH = os.path.join(PROJECT_ROOT, "ai_models", "loras", "output", "Lifeline.safetensors")
+
+# 支援外掛環境變數，解決 App Bundle 內部重新命名的問題
+MODEL_BASE = os.environ.get("LIFELINE_MODEL_DIR")
+if not MODEL_BASE or not os.path.exists(MODEL_BASE):
+    MODEL_BASE = os.path.join(PROJECT_ROOT, "ai_models")
+    
+LORA_PATH = os.path.join(MODEL_BASE, "loras", "output", "Lifeline.safetensors")
 SOURCE_IMAGES_DIR = os.path.join(PROJECT_ROOT, "source images")
 
 # === 資料模型 ===
