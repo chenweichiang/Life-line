@@ -150,31 +150,9 @@ if [ -d "$PROJECT_ROOT/source images" ]; then
 fi
 
 # ═══════════════════════════════════
-# 6. 複製 App Icon
+# 6. 建立 DMG
 # ═══════════════════════════════════
-echo "🖼️ [6/7] 複製 App 圖像..."
-ICON_SRC="$PROJECT_ROOT/app_macos/AppIcon.icns"
-if [ -f "$ICON_SRC" ]; then
-    cp "$ICON_SRC" "$RESOURCES/"
-    echo "  ✅ AppIcon.icns 複製完成"
-else
-    echo "  ⚠️ 找不到 AppIcon.icns"
-fi
-
-# ═══════════════════════════════════
-# 7. 簽章與清理
-# ═══════════════════════════════════
-echo "🔐 [7/8] 進行 Ad-Hoc 程式碼簽章..."
-# 清除可能繼承的隔離屬性
-xattr -cr "$APP_DIR" || true
-# 深度簽署整個 App (包含內部 Python 依賴)，減少「未受信任的開發者/檔案已損毀」警告
-codesign --force --deep -s - "$APP_DIR" || echo "  ⚠️ 簽章遭遇部分警告，但不影響使用"
-echo "  ✅ 簽章完成"
-
-# ═══════════════════════════════════
-# 8. 建立 DMG
-# ═══════════════════════════════════
-echo "💿 [8/8] 建立 DMG..."
+echo "💿 [6/6] 建立 DMG..."
 
 # 計算 App 大小
 APP_SIZE=$(du -sm "$APP_DIR" | cut -f1)
