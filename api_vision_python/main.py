@@ -208,6 +208,22 @@ async def startup_event():
     load_model()
 
 
+# === 輸出路徑設定 ===
+AI_OUTPUT_DIR = os.path.join(PROJECT_ROOT, "ai_output")
+os.makedirs(AI_OUTPUT_DIR, exist_ok=True)
+
+def _save_to_ai_output(img_base64: str, label: str) -> str:
+    """將生成的圖片自動存檔至 ai_output 資料夾"""
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{timestamp}_{label}.jpg"
+    filepath = os.path.join(AI_OUTPUT_DIR, filename)
+    with open(filepath, "wb") as f:
+        f.write(base64.b64decode(img_base64))
+    print(f"💾 Saved: {filepath}")
+    return filename
+
+
 @app.post("/generate_vision")
 def generate_vision(vector: EmotionVector):
     print(f"📨 Received: {vector}")
@@ -216,9 +232,11 @@ def generate_vision(vector: EmotionVector):
         # 使用真正的 AI 大腦
         try:
             img_str = ai_generation(vector)
+            saved = _save_to_ai_output(img_str, "sdxl")
             return {
                 "image_base64": img_str,
                 "prompt": "SDXL + Lifeline LoRA (AI Brain)",
+                "saved_file": saved,
             }
         except Exception as e:
             print(f"AI generation failed: {e}, falling back to procedural")
@@ -226,9 +244,11 @@ def generate_vision(vector: EmotionVector):
     # Fallback: 程序化引擎
     try:
         img_str = procedural_generation(vector)
+        saved = _save_to_ai_output(img_str, "procedural")
         return {
             "image_base64": img_str,
-            "prompt": "Procedural Fallback (OpenCV Engine)",
+            "prompt": "Procedural Fallback (SciPy Engine)",
+            "saved_file": saved,
         }
     except Exception as e:
         import traceback
