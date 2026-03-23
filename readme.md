@@ -3,6 +3,18 @@
 ## 專案概述 (Project Overview)
 「Life Line」是一個即時互動的科技藝術裝置，結合 **AI 影像生成**與 **粒子物理引擎**，將 AI 生成的畫作轉化為可互動的「活的畫布」——數十萬粒子隨著滑鼠與有機流場四處流動。
 
+## 下載 (Download)
+
+> **📦 [下載 Life Line v1.0.0 (.dmg, 706MB)](https://github.com/chenweichiang/Life-line/releases/tag/v1.0.0)**
+
+### 安裝方式
+1. 下載 `LifeLine-v1.0.0.dmg`
+2. 雙擊開啟 DMG
+3. 將 **Life Line** 拖入 **Applications** 資料夾
+4. 首次開啟：右鍵 → 打開（繞過 macOS 安全性檢查）
+5. 首次啟動會自動下載 SDXL 基底模型（~6GB），需要網路連線
+6. 模型載入完成後即可輸入文字生成 AI 藝術圖
+
 ## 系統需求 (System Requirements)
 
 | 項目 | 最低需求 | 建議配置 |
@@ -194,7 +206,12 @@ Lifeline LoRA 學到的核心視覺特徵：
 
 ## 快速開始 (Getting Started)
 
-### 方法一：一鍵安裝（推薦）
+### 一般使用者
+直接[下載 DMG](https://github.com/chenweichiang/Life-line/releases/tag/v1.0.0)，雙擊安裝即可使用。
+
+### 開發者
+
+#### 方法一：腳本安裝
 ```bash
 git clone https://github.com/chenweichiang/Life-line.git
 cd Life-line
@@ -203,39 +220,36 @@ git lfs pull          # 下載 AI 模型（435MB）
 ./run.sh              # 啟動 AI 後端 + SwiftUI App
 ```
 
-### 方法二：手動啟動
-
-#### 1. 啟動 Vision API
+#### 方法二：手動啟動
 ```bash
-cd api_vision_python
-source .venv/bin/activate
+# 1. 啟動 Vision API
+cd api_vision_python && source .venv/bin/activate
 uvicorn main:app --port 8001
 # 等待 "✅ SDXL + LoRA model ready!" 出現
+
+# 2. 啟動 SwiftUI App（另一個終端機）
+cd app_macos && swift run
+
+# 3. 啟動粒子引擎（可選，另一個終端機）
+cd engine_rust && cargo run --release
 ```
 
-#### 2. 啟動 SwiftUI App
+#### 打包 DMG
 ```bash
-cd app_macos
-swift run            # 開發模式
-# 或
-swift build -c release && .build/release/LifeLine  # Release 模式
+./build_dmg.sh   # 編譯 + 打包 Python 環境 + 模型 → build/LifeLine-v1.0.0.dmg
 ```
 
-#### 3. 啟動粒子引擎（可選）
-```bash
-source $HOME/.cargo/env
-cd engine_rust
-cargo run --release
-```
-
-### 3. 批次生圖測試
+#### 批次生圖 API
 ```python
 import requests, base64
 payload = {
     "intensity": 0.85,
     "color_tone": "warm",
     "flow": "chaotic",
-    "custom_prompt": "你的自訂 prompt"
+    "custom_prompt": "你的自訂 prompt",
+    "lora_scale": 0.4,       # LoRA 影響力 (0.0~1.0)
+    "num_steps": 25,          # 推論步數
+    "guidance_scale": 8.5     # Guidance scale
 }
 r = requests.post("http://127.0.0.1:8001/generate_vision", json=payload)
 with open("output.jpg", "wb") as f:
@@ -248,30 +262,33 @@ with open("output.jpg", "wb") as f:
 ```
 life_line/
 ├── readme.md              # 本文件
+├── install.sh             # 一鍵安裝腳本
+├── run.sh                 # 快速啟動腳本
+├── build_dmg.sh           # DMG 打包腳本
 ├── agents.md              # AI 協作通用指南
 ├── gemini.md              # Gemini 專屬創作協議
 ├── source images/         # 原始圖形素材（不可刪除）
 ├── ai_models/
 │   └── loras/output/
-│       └── Lifeline.safetensors  # 訓練好的 LoRA 權重
-├── ai_output/             # AI 生成的圖檔輸出
-│   ├── batch10/           # 第一批 10 張
-│   ├── batch_diverse/     # 配色多樣化批次
-│   ├── batch_v3/          # 極端構圖批次
-│   └── batch_v4/          # 最新批次（推薦參考）
+│       └── Lifeline.safetensors  # LoRA 權重 (Git LFS)
+├── app_macos/             # SwiftUI 原生 macOS App
+│   ├── Package.swift
+│   └── Sources/LifeLine/
+│       ├── LifeLineApp.swift       # App 進入點
+│       ├── ContentView.swift       # 主 UI
+│       ├── GenerationService.swift  # HTTP 通訊層
+│       ├── PythonBackend.swift     # Python 後端管理
+│       └── Models.swift            # 資料模型
 ├── api_vision_python/
-│   ├── main.py            # Vision AI API 主程式
+│   ├── main.py            # Vision AI API（SDXL + LoRA）
 │   └── .venv/             # Python 虛擬環境
-├── api_audio_python/
-│   └── main.py            # Audio API（暫停使用）
-├── engine_rust/
-│   ├── src/main.rs        # 粒子引擎核心
+├── engine_rust/           # 粒子物理引擎
+│   ├── src/main.rs
 │   ├── src/render_system.rs
 │   └── Cargo.toml
 └── docker/
     ├── docker-compose.yml
     ├── Dockerfile.vision
-    ├── Dockerfile.rust
     └── train_lora.sh       # LoRA 訓練腳本
 ```
 
