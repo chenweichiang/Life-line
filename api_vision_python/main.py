@@ -225,5 +225,8 @@ def generate_vision(vector: EmotionVector):
             "prompt": "Procedural Fallback (OpenCV Engine)",
         }
     except Exception as e:
+        import traceback
+        with open("/tmp/lifeline_py_error.log", "a") as f:
+            f.write(f"All generation failed: {e}\n{traceback.format_exc()}\n")
         print(f"All generation failed: {e}")
         return {"image_base64": "", "prompt": "Error"}

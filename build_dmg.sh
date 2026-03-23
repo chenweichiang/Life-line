@@ -123,8 +123,6 @@ fi
 echo "  清理快取..."
 find "$RESOURCES/python" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 find "$RESOURCES/python" -name "*.pyc" -delete 2>/dev/null || true
-find "$RESOURCES/python" -name "tests" -type d -exec rm -rf {} + 2>/dev/null || true
-find "$RESOURCES/python" -name "test_*" -delete 2>/dev/null || true
 
 PYTHON_SIZE=$(du -sh "$RESOURCES/python" | cut -f1)
 echo "  ✅ Python 環境: $PYTHON_SIZE"
@@ -157,7 +155,7 @@ fi
 
 # 複製原始素材（for procedural fallback）
 if [ -d "$PROJECT_ROOT/source images" ]; then
-    cp -R "$PROJECT_ROOT/source images" "$RESOURCES/source_images" 2>/dev/null || true
+    cp -R "$PROJECT_ROOT/source images" "$RESOURCES/source images" 2>/dev/null || true
     echo "  ✅ 原始素材複製完成"
 fi
 
