@@ -70,7 +70,13 @@ flowchart LR
     Engine -->|"POST /generate_vision\n(EmotionVector)"| Python
     Python -->|"Base64 JPEG\n1024×1024"| Engine
     Models --> LoRA
-    Source -.->|"Procedural\nFallback"| Python
+    Source -.->|"Procedural\nFallback (SciPy)"| Python
+
+    subgraph 輸出
+        Output["ai_output/\n時間戳自動存檔"]
+    end
+
+    Python -->|"自動存檔"| Output
 ```
 
 ### 元件說明
@@ -82,7 +88,8 @@ flowchart LR
 | **Audio API** | `api_audio_python/` | FastAPI + Kira | 程序化音頻生成（目前暫停） |
 | **AI 模型** | `ai_models/` | Kohya LoRA 訓練 | 訓練好的 Lifeline.safetensors |
 | **Docker** | `docker/` | Docker Compose | 容器化部署環境 |
-| **原始素材** | `source images/` | JPG | 藝術創作的視覺基底素材 |
+| **原始素材** | `source images/` | JPG | LoRA 訓練素材（已完成訓練） |
+| **生圖輸出** | `ai_output/` | JPEG | AI 生成圖片自動存檔（時間戳命名） |
 
 ---
 
@@ -276,7 +283,8 @@ life_line/
 ├── build_dmg.sh           # DMG 打包腳本
 ├── agents.md              # AI 協作通用指南
 ├── gemini.md              # Gemini 專屬創作協議
-├── source images/         # 原始圖形素材（不可刪除）
+├── ai_output/             # AI 生成圖片自動存檔（時間戳命名）
+├── source images/         # LoRA 訓練素材（已完成訓練，不可刪除）
 ├── ai_models/
 │   └── loras/output/
 │       └── Lifeline.safetensors  # LoRA 權重 (Git LFS)
