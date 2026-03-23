@@ -150,9 +150,13 @@ if [ -d "$PROJECT_ROOT/source images" ]; then
 fi
 
 # ═══════════════════════════════════
-# 6. 建立 DMG
+# 6. 清除 extended attributes 後建立 DMG
 # ═══════════════════════════════════
-echo "💿 [6/6] 建立 DMG..."
+echo "🧹 [6/6] 清除 xattr 並建立 DMG..."
+# 關鍵修復：iCloud Drive 的 fileprovider 與 provenance 屬性
+# 會導致 macOS Gatekeeper 將 App 標記為「已損毀」
+xattr -cr "$APP_DIR"
+echo "  ✅ 已清除所有 extended attributes"
 
 # 計算 App 大小
 APP_SIZE=$(du -sm "$APP_DIR" | cut -f1)
@@ -166,8 +170,12 @@ DMG_TEMP="$BUILD_DIR/dmg_temp"
 rm -rf "$DMG_TEMP"
 mkdir -p "$DMG_TEMP"
 
-# 複製 .app 到暫時目錄
-cp -R "$APP_DIR" "$DMG_TEMP/"
+# 使用 ditto --norsrc 複製（不帶 resource fork / xattr）
+ditto --norsrc "$APP_DIR" "$DMG_TEMP/LifeLine.app"
+
+# 雙重保險：再次清除 staging 裡所有 xattr
+xattr -cr "$DMG_TEMP/LifeLine.app"
+echo "  ✅ staging 目錄已清除所有 xattr"
 
 # 建立 Applications 捷徑
 ln -s /Applications "$DMG_TEMP/Applications"
