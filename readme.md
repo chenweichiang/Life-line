@@ -5,10 +5,10 @@
 
 ## 下載 (Download)
 
-> **📦 [下載 Life Line v1.0.0 (.dmg, 706MB)](https://github.com/chenweichiang/Life-line/releases/tag/v1.0.0)**
+> **📦 [下載 Life Line v1.1.0 (.dmg, ~708MB)](https://github.com/chenweichiang/Life-line/releases/tag/v1.1.0)**
 
 ### 安裝方式
-1. 下載 `LifeLine-v1.0.0.dmg`
+1. 下載 `LifeLine-v1.1.0.dmg`
 2. 雙擊開啟 DMG
 3. 將 **Life Line** 拖入 **Applications** 資料夾
 4. 從 Launchpad 或 Applications 中開啟
@@ -216,7 +216,7 @@ Lifeline LoRA 學到的核心視覺特徵：
 ## 快速開始 (Getting Started)
 
 ### 一般使用者
-直接[下載 DMG](https://github.com/chenweichiang/Life-line/releases/tag/v1.0.0)，雙擊安裝即可使用。
+直接[下載 DMG](https://github.com/chenweichiang/Life-line/releases/tag/v1.1.0)，雙擊安裝即可使用。
 
 ### 開發者
 
@@ -245,7 +245,7 @@ cd engine_rust && cargo run --release
 
 #### 打包 DMG
 ```bash
-./build_dmg.sh   # 編譯 + 打包 Python 環境 + 模型 → build/LifeLine-v1.0.0.dmg
+./build_dmg.sh   # 編譯 + 打包 Python 環境 + 模型 → build/LifeLine-v1.1.0.dmg
 ```
 
 #### 批次生圖 API

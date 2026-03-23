@@ -10,6 +10,7 @@
 - 專案核心語言為 **Rust**。利用 Rust 的高效能特性處理複雜的視覺渲染（如粒子系統、著色器演算、流體模擬或大量資料視覺化等）。
 - 所有的程式編譯、執行與測試都必須在 **本機電腦的 Docker 環境** 中運作。
 - 在提供終端機指令、撰寫 `Dockerfile` 或 `docker-compose.yml` 時，請確保配置符合圖形渲染（若是需要 GPU 加速、X11/Wayland 轉發等）或本機開發目錄掛載的需求。
+- **macOS 打包規範**：當處理 macOS App (SwiftUI) 與 DMG 打包（如 `build_dmg.sh`）時，請確保視覺資產（如 `AppIcon.iconset`）依照 Apple 規範建立，並主動處理 `xattr` 屬性，避免 Gatekeeper 誤判檔案損毀。
 
 ## 程式碼風格與溝通 (Code styling & Communication)
 - 遵循 Rust 的標準慣例，使用 `cargo fmt` 和 `clippy` 進行檢查。
