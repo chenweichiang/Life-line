@@ -179,6 +179,52 @@ Lifeline LoRA 學到的核心視覺特徵：
 "extreme macro of oxidized copper surface, vivid verdigris turquoise patches against raw burnt copper orange, chemical reaction"
 ```
 
+##### 🔬 科技 × 有機融合配方（已驗證高品質）
+
+> LoRA 的有機流動 DNA 與科技語彙碰撞時，會產生極具張力的視覺效果。
+> 關鍵策略：用科技結構（電路、量子、全息）作為骨架，讓 LoRA 的有機線條去「入侵」它。
+
+```python
+# 🌃 賽博城市脈動 — 街道化為霓虹血管（高評分）
+"aerial view of cyberpunk city grid, streets as flowing veins of neon light, buildings as circuit components, hot pink and electric blue on charcoal"
+
+# 🏙️ 生物發光巷弄 — 城市有機體特寫（高評分）
+"cyberpunk alleyway with walls covered in bioluminescent circuit patterns, neon veins pulsing through concrete, rain-soaked reflections of hot pink and electric cyan"
+
+# 🏔️ 數位山水 — 水墨遇上量子（高評分）
+"traditional mountain landscape dissolving into digital pixels and data particles, ink wash flowing into glitch art, jade green and silver on black"
+
+# ☁️ 雲海量子化 — 禪意遇上科技
+"sea of clouds viewed from mountain peak, clouds fragmenting into geometric voxels and data cubes, golden sunrise light piercing through digital fog"
+
+# 🚀 太空站心臟 — 太空建築的生命感（高評分）
+"space station core shaped like beating heart, corridors as arteries flowing with light, cosmic nebula background, ruby red and stellar blue"
+
+# 🪼 太空水母 — 透明宇宙生物
+"colossal space creature with transparent body revealing internal architecture of corridors and reactors, veins of plasma flowing through crystalline skeleton, cosmic jellyfish"
+
+# ☀️ 核融合心跳 — 能量脈動特寫
+"extreme close-up of fusion reactor core pulsing like a heart, magnetic containment rings as arteries, plasma tendrils reaching outward like capillaries, intense orange white and electric blue"
+
+# 🤖 AI 意識覺醒 — 數位面孔浮現（高評分）
+"artificial intelligence awakening, abstract face emerging from ocean of flowing data streams and fiber optics, golden light breaking through indigo digital fog"
+
+# 👥 群體意識 — 多重面孔共振
+"collective AI consciousness, multiple translucent faces overlapping and merging, shared neural pathways flowing between them like rivers of light, aurora borealis palette on void black"
+
+# 🏛️ AI 思維大教堂 — 資料結構宮殿
+"inside an artificial mind, vast cathedral of floating data structures and memory palaces, thought pathways as flowing golden ribbons connecting crystalline nodes"
+
+# 🌳 光纖宇宙樹 — 科技生命樹（高評分）
+"cosmic world tree made of fiber optic cables, branches transmitting light pulses, roots diving into motherboard earth, electric cyan amber and violet"
+
+# ⛏️ 電路板地層 — 科技考古學
+"roots of cosmic tree penetrating deep underground layers of ancient circuit boards and fossilized microchips, geological cross-section meets technology archaeology, amber copper and emerald"
+
+# 🌌 星系樹冠 — 宇宙尺度的有機結構
+"canopy of world tree where each leaf is a tiny galaxy, branches as dark matter filaments connecting star clusters, cosmic scale organic structure, deep indigo gold and nebula pink"
+```
+
 #### 隨機修飾詞系統
 每次生成會從以下 12 個修飾詞中隨機抽取 2 個，增加同一 prompt 的變化：
 - `dense layered textures` / `ethereal transparent washes`
