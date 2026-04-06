@@ -1,0 +1,8 @@
+# VectorFusion 向量引擎依賴
+# 主方案：SDXL 生圖 → VTracer 描邊（< 1 分鐘）
+# 備援方案：diffvg_torch.py 純 PyTorch 微分渲染（實驗用）
+torch>=2.0.0
+torchvision>=0.15.0
+vtracer>=0.6.0
+svgwrite>=1.4.1
+scikit-image>=0.19.0

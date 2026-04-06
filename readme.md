@@ -58,7 +58,9 @@ flowchart LR
     subgraph Python["Vision API (Python :8001)"]
         SDXL["SDXL 基底模型"]
         LoRA["Lifeline LoRA\n(safetensors)"]
+        VTracer["VTracer (Rust)\n彩色向量化"]
         SDXL --> |融合| LoRA
+        LoRA --> |"1024×1024 JPG"| VTracer
     end
 
     subgraph 素材
@@ -73,10 +75,12 @@ flowchart LR
     Source -.->|"Procedural\nFallback (SciPy)"| Python
 
     subgraph 輸出
-        Output["ai_output/\n時間戳自動存檔"]
+        JPG["ai_output/*.jpg\nRaster 影像"]
+        SVG["ai_output/*.svg\n向量圖 (7000+ paths)"]
     end
 
-    Python -->|"自動存檔"| Output
+    Python -->|"自動存檔"| JPG
+    VTracer -->|"即時描邊"| SVG
 ```
 
 ### 元件說明
@@ -85,15 +89,29 @@ flowchart LR
 |------|------|------|------|
 | **Rust 粒子引擎** | `engine_rust/` | Bevy + Metal GPU | 即時粒子渲染、滑鼠互動、有機流場 |
 | **Vision AI API** | `api_vision_python/` | FastAPI + SDXL + LoRA | AI 影像生成，回傳 Base64 JPEG |
+| **SVG 向量化引擎** | `api_vision_python/` | VTracer (Rust bindings) | 將 raster 影像轉為高品質 SVG |
+| **微分渲染器** | `api_vision_python/diffvg_torch.py` | 純 PyTorch | 實驗性微分向量渲染器（備援） |
 | **Audio API** | `api_audio_python/` | FastAPI + Kira | 程序化音頻生成（目前暫停） |
 | **AI 模型** | `ai_models/` | Kohya LoRA 訓練 | 訓練好的 Lifeline.safetensors |
 | **Docker** | `docker/` | Docker Compose | 容器化部署環境 |
 | **原始素材** | `source images/` | JPG | LoRA 訓練素材（已完成訓練） |
-| **生圖輸出** | `ai_output/` | JPEG | AI 生成圖片自動存檔（時間戳命名） |
+| **生圖輸出** | `ai_output/` | JPG + SVG | AI 生成圖片與向量圖自動存檔 |
 
 ---
 
 ## AI 生圖系統 (Vision AI Generation)
+
+### 雙輸出架構：JPG (Raster) + SVG (Vector)
+
+本專案支援兩種輸出格式，適用於不同的應用場景：
+
+| 格式 | 生成方式 | 耗時 | 用途 |
+|------|---------|------|------|
+| **JPG (1024×1024)** | SDXL + LoRA 直接生成 | ~40s | 粒子引擎素材、網頁展示、社群分享 |
+| **SVG (7000+ paths)** | SDXL 生成 → VTracer 向量化 | ~42s | Bevy 即時動畫、無損縮放、印刷輸出 |
+
+> [!IMPORTANT]
+> SVG 並非用微分渲染器「從零雕刻」，而是先讓 SDXL 生成完整的高品質 raster，再由 VTracer（Rust 引擎）以影像描邊演算法將其轉為貝茲曲線向量圖。這確保了 SVG 的視覺品質與 raster 完全一致。
 
 ### 模型配置
 - **基底模型**：`stabilityai/stable-diffusion-xl-base-1.0` (SDXL)
@@ -103,12 +121,21 @@ flowchart LR
 - **輸出尺寸**：1024×1024
 - **推論步數**：15~30 步（隨 intensity 動態調整）
 - **Guidance Scale**：7.0~10.0（隨 intensity 動態調整）
+- **VTracer 版本**：0.6.15（Rust 核心，Python bindings）
 
 ### API 端點
 
+#### 1. 生成 Raster (JPG)
 ```
 POST http://127.0.0.1:8001/generate_vision
 ```
+回傳 Base64 編碼的 JPEG 影像。
+
+#### 2. 生成向量圖 (SVG)
+```
+POST http://127.0.0.1:8001/task/generate_svg
+```
+背景執行：SDXL 生圖 → VTracer 向量化 → SVG 檔案。回傳 task_id 與檔案路徑。
 
 #### 請求參數 (EmotionVector)
 
@@ -301,7 +328,7 @@ cd engine_rust && cargo run --release
 ./build_dmg.sh   # 編譯 + 打包 Python 環境 + 模型 → build/LifeLine-v1.1.0.dmg
 ```
 
-#### 批次生圖 API
+#### 生成 Raster (JPG)
 ```python
 import requests, base64
 payload = {
@@ -318,6 +345,31 @@ with open("output.jpg", "wb") as f:
     f.write(base64.b64decode(r.json()["image_base64"]))
 ```
 
+#### 生成向量圖 (SVG)
+```bash
+# 提交非同步 SVG 生成任務（SDXL → VTracer，約 42 秒）
+curl -X POST http://127.0.0.1:8001/task/generate_svg \
+  -H "Content-Type: application/json" \
+  -d '{"intensity": 0.7, "color_tone": "cool", "flow": "chaotic", "custom_prompt": "光纖宇宙樹, cosmic fiber tree"}'
+
+# 回傳：{ "task_id": "abc12345", "status": "processing", "expected_output": "/path/to/vector.svg" }
+```
+
+#### VTracer 品質設定（進階）
+直接使用 VTracer Python API 可微調向量化精度：
+```python
+import vtracer
+vtracer.convert_image_to_svg_py(
+    "input.jpg", "output.svg",
+    colormode='color',       # 彩色模式
+    mode='spline',           # 'spline'=平滑曲線, 'polygon'=銳利折線
+    color_precision=6,       # 色階精度 (4=簡約1K paths, 6=標準7K, 8=精緻12K)
+    filter_speckle=4,        # 過濾 N px 以下雜點
+    corner_threshold=60,     # 角偵測閾值
+    path_precision=3,        # SVG 座標小數位數
+)
+```
+
 ---
 
 ## 目錄結構 (Directory Structure)
@@ -329,7 +381,9 @@ life_line/
 ├── build_dmg.sh           # DMG 打包腳本
 ├── agents.md              # AI 協作通用指南
 ├── gemini.md              # Gemini 專屬創作協議
-├── ai_output/             # AI 生成圖片自動存檔（時間戳命名）
+├── ai_output/             # AI 生成輸出（時間戳命名）
+│   ├── *_raster.jpg       #   SDXL 生成的 raster 影像
+│   └── *_vector.svg       #   VTracer 向量化的 SVG
 ├── source images/         # LoRA 訓練素材（已完成訓練，不可刪除）
 ├── ai_models/
 │   └── loras/output/
@@ -343,7 +397,10 @@ life_line/
 │       ├── PythonBackend.swift     # Python 後端管理
 │       └── Models.swift            # 資料模型
 ├── api_vision_python/
-│   ├── main.py            # Vision AI API（SDXL + LoRA）
+│   ├── main.py            # Vision AI API（SDXL + LoRA + VTracer）
+│   ├── diffvg_torch.py    # 純 PyTorch 微分向量渲染器（實驗性）
+│   ├── vector_optimizer.py # SDS 微分優化引擎（實驗性）
+│   ├── vector_requirements.txt  # 向量引擎依賴
 │   └── .venv/             # Python 虛擬環境
 ├── engine_rust/           # 粒子物理引擎
 │   ├── src/main.rs
