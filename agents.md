@@ -35,7 +35,7 @@
 ## 開發環境指引 (Dev environment tips)
 - 專案核心語言為 **Rust**。利用 Rust 的高效能特性處理複雜的視覺渲染（如粒子系統、著色器演算、流體模擬或大量資料視覺化等）。
 - Python Vision API 位於 `api_vision_python/`，使用 FastAPI 架構，可透過 `uvicorn main:app --port 8001` 啟動。
-- **macOS 打包規範**：當處理 macOS App (SwiftUI) 與 DMG 打包（如 `build_dmg.sh`）時，請確保視覺資產（如 `AppIcon.iconset`）依照 Apple 規範建立，並主動處理 `xattr` 屬性，避免 Gatekeeper 誤判檔案損毀。
+- **macOS 提供**：在處理 macOS App (SwiftUI) 時，請確保視覺資產（如 `AppIcon.iconset`）依照 Apple 規範建立。
 
 ## 程式碼風格與溝通 (Code styling & Communication)
 - 遵循 Rust 的標準慣例，使用 `cargo fmt` 和 `clippy` 進行檢查。

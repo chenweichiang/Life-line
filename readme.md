@@ -3,26 +3,10 @@
 ## 專案概述 (Project Overview)
 「Life Line」是一個即時互動的科技藝術裝置，結合 **AI 影像生成**與 **粒子物理引擎**，將 AI 生成的畫作轉化為可互動的「活的畫布」——數十萬粒子隨著滑鼠與有機流場四處流動。
 
-## 下載 (Download)
+## 下載與安裝 (Getting Started)
 
-> **📦 [下載 Life Line v1.1.0 (.dmg, ~708MB)](https://github.com/chenweichiang/Life-line/releases/tag/v1.1.0)**
+請參閱下方的 [開發指南](#開發者) 進行原始碼安裝。
 
-### 安裝方式
-1. 下載 `LifeLine-v1.1.0.dmg`
-2. 雙擊開啟 DMG
-3. 將 **Life Line** 拖入 **Applications** 資料夾
-4. 從 Launchpad 或 Applications 中開啟
-5. 首次啟動會自動下載 SDXL 基底模型（~6GB），需要網路連線
-6. 模型載入完成後即可輸入文字生成 AI 藝術圖
-
-### 常見問題 (FAQ)
-
-**Q: 開啟時顯示「Life Line 檔案已損毀，您應該將它丟到『垃圾桶』」？**
-A: 這是 macOS Gatekeeper 對未經 App Store 認證的開源軟體的安全保護機制（隔離屬性）。
-解決方式：打開「終端機 (Terminal)」，貼上以下指令並按 Enter 即可正常開啟：
-```bash
-xattr -cr /Applications/LifeLine.app
-```
 
 ## 系統需求 (System Requirements)
 
@@ -294,8 +278,7 @@ Lifeline LoRA 學到的核心視覺特徵：
 
 ## 快速開始 (Getting Started)
 
-### 一般使用者
-直接[下載 DMG](https://github.com/chenweichiang/Life-line/releases/tag/v1.1.0)，雙擊安裝即可使用。
+
 
 ### 開發者
 
@@ -322,10 +305,6 @@ cd app_macos && swift run
 cd engine_rust && cargo run --release
 ```
 
-#### 打包 DMG
-```bash
-./build_dmg.sh   # 編譯 + 打包 Python 環境 + 模型 → build/LifeLine-v1.1.0.dmg
-```
 
 #### 生成 Raster (JPG)
 ```python
@@ -377,7 +356,6 @@ life_line/
 ├── readme.md              # 本文件
 ├── install.sh             # 一鍵安裝腳本
 ├── run.sh                 # 快速啟動腳本
-├── build_dmg.sh           # DMG 打包腳本
 ├── agents.md              # AI 協作通用指南
 ├── gemini.md              # Gemini 專屬創作協議
 ├── ai_output/             # AI 生成輸出（時間戳命名）
