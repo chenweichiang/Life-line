@@ -17,7 +17,7 @@
 
 - **主動剖析素材**：`source images` 內的檔案已用於訓練 LoRA 權重，其視覺精髓（有機流動線條、中心對稱構圖、剪紙浮雕質感）已蒸餾進 `Lifeline.safetensors`。在調整 prompt 或微調模型參數時，請以此為不可偏離的美學基底。
 - **雙輸出管線 (JPG + SVG)**：
-  - **Raster (JPG)**：SDXL + LoRA 直接生成 1024×1024 影像（~40s），自動存入 `ai_output/`，命名格式 `YYYYMMDD_HHMMSS_raster.jpg`。
+  - **Raster (JPG)**：SDXL + LCM + LoRA (0.85) 直接生成 1024×1024 影像（極速 ~20s 以內），自動存入 `ai_output/`，命名格式 `YYYYMMDD_HHMMSS_raster.jpg`。
   - **Vector (SVG)**：上述 JPG 經由 **VTracer**（Rust 影像描邊引擎，`pip install vtracer`）轉為 7000+ 路徑的高品質 SVG（~1-2s），存為 `YYYYMMDD_HHMMSS_vector.svg`。
   - 兩種格式的視覺品質完全一致。SVG 可用於 Bevy 即時動畫、無損縮放、印刷輸出。
 - **雙引擎防呆架構**：正常生圖使用 SDXL + LoRA（Apple MPS 加速），模型無法載入時自動降級為 SciPy/NumPy 程序化備援引擎（無 OpenCV 依賴），確保使用者永遠能拿到圖片。

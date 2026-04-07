@@ -15,7 +15,7 @@
 
 | 步驟 | 元件 | 輸出 | 說明 |
 |------|------|------|------|
-| 1. Raster 生成 | SDXL + LoRA (Apple MPS) | 1024×1024 JPG (~40s) | 觸發詞 `lifeline_art_style` + 自訂 prompt |
+| 1. Raster 生成 | SDXL + LCM + LoRA (Apple MPS) | 1024×1024 JPG (~20s) | 觸發詞 `lifeline_art_style` + 自訂 prompt + LoRA Scale 0.85 最佳化 |
 | 2. 向量化 | VTracer (Rust → Python bindings) | SVG (7000+ paths, ~1-2s) | 彩色影像描邊，保留完整色彩與紋理 |
 
 ### 關鍵依賴
