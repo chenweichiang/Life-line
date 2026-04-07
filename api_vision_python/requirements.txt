@@ -5,3 +5,5 @@ transformers
 torch
 accelerate
 scipy
+peft
+huggingface-hub

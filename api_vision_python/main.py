@@ -54,9 +54,17 @@ def load_model():
             use_safetensors=True,
         )
 
-        print(f"🎨 Loading LoRA weights from: {LORA_PATH}")
-        pipe.load_lora_weights(LORA_PATH)
-        # 注意：我們移除了 pipe.fuse_lora()，否則權重會被焊死在 1.0，導致 API 傳入的 lora_scale 失效
+        from diffusers import LCMScheduler
+        print(f"🚀 Injecting LCMScheduler for extreme acceleration...")
+        pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
+
+        print(f"⚡ Loading LCM-LoRA weights...")
+        pipe.load_lora_weights("latent-consistency/lcm-lora-sdxl", adapter_name="lcm")
+
+        print(f"🎨 Loading Lifeline LoRA weights from: {LORA_PATH}")
+        pipe.load_lora_weights(LORA_PATH, adapter_name="lifeline", use_safetensors=True)
+        # 初始設定 adapters
+        pipe.set_adapters(["lcm", "lifeline"], adapter_weights=[1.0, 0.4])
 
         # Apple M4 Max MPS 加速
         if torch.backends.mps.is_available():
@@ -119,16 +127,19 @@ def ai_generation(vector: EmotionVector) -> str:
 
     negative_prompt = "photorealistic, 3d render, text, watermark, blurry, low quality"
 
-    # 推論步數：使用者指定 > 自動計算
-    num_steps = vector.num_steps if vector.num_steps > 0 else int(15 + vector.intensity * 15)
-    # Guidance scale：使用者指定 > 自動計算
-    guidance = vector.guidance_scale if vector.guidance_scale > 0 else 7.0 + vector.intensity * 3.0
+    # 推論步數：使用者指定 > 自動計算 (LCM 加速，只需 4~7 步！)
+    num_steps = vector.num_steps if vector.num_steps > 0 else int(4 + vector.intensity * 3)
+    # Guidance scale：使用者指定 > 自動計算 (LCM 需要低 CFG，通常 1.0~2.0)
+    guidance = vector.guidance_scale if vector.guidance_scale > 0 else 1.0 + vector.intensity * 1.0
     # LoRA scale
     lora_scale = max(0.0, min(1.0, vector.lora_scale))
+    
+    # 動態設定多重 LoRA 權重
+    pipe.set_adapters(["lcm", "lifeline"], adapter_weights=[1.0, lora_scale])
 
     print(f"🎲 Seed: {seed}")
     print(f"🎨 Prompt: {base_prompt[:80]}...")
-    print(f"⚙️ Steps: {num_steps} | Guidance: {guidance:.1f} | LoRA: {lora_scale:.2f}")
+    print(f"🚀 LCM Accelerated - Steps: {num_steps} | Guidance: {guidance:.1f} | Lifeline LoRA: {lora_scale:.2f}")
 
     image = pipe(
         prompt=base_prompt,
@@ -138,7 +149,6 @@ def ai_generation(vector: EmotionVector) -> str:
         width=1024,
         height=1024,
         generator=generator,
-        cross_attention_kwargs={"scale": lora_scale},
     ).images[0]
 
     # 轉 Base64
@@ -268,10 +278,10 @@ def _run_vector_generation_task(vector: EmotionVector, task_id: str, output_svg:
     向量生成任務：SDXL + LoRA → raster → VTracer → SVG
     
     比起 SDS 微分優化法（15 分鐘），這套管線：
-    1. 用 SDXL + LoRA 生成高品質 raster（~40s）→ 保持完整的 Lifeline 美學
+    1. 用 SDXL + LCM + LoRA 生成高品質 raster（~4s）→ 保持美學並極速生成
     2. 用 VTracer（Rust 引擎）即時將 raster 轉為 SVG（~1-2s）
     
-    總計 < 1 分鐘，且生成品質與直接生圖完全一致。
+    總計 < 10 秒即出向量圖。
     """
     try:
         import vtracer
@@ -318,9 +328,9 @@ def _run_vector_generation_task(vector: EmotionVector, task_id: str, output_svg:
 def generate_svg_task(vector: EmotionVector, background_tasks: BackgroundTasks):
     """
     生成向量圖（SVG）：
-    SDXL + LoRA 生成 raster → VTracer 即時描邊 → 高品質 SVG
+    SDXL + LCM 生成 raster → VTracer 即時描邊 → 高品質 SVG
     
-    預計耗時 < 1 分鐘。
+    預計耗時 < 10 秒。
     """
     task_id = str(uuid.uuid4())[:8]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -334,6 +344,6 @@ def generate_svg_task(vector: EmotionVector, background_tasks: BackgroundTasks):
         "task_id": task_id,
         "status": "processing",
         "expected_output": filepath,
-        "message": "Vector generation started (SDXL + VTracer). Should complete in under 1 minute.",
+        "message": "Vector generation started (SDXL-LCM + VTracer). Should complete in 5~10 seconds.",
     }
 
