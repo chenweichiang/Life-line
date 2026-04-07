@@ -32,7 +32,7 @@ class EmotionVector(BaseModel):
     color_tone: str
     flow: str
     custom_prompt: str = ""  # 自訂 prompt（留空則自動組合）
-    lora_scale: float = 0.4  # LoRA 影響力（0.0~1.0）
+    lora_scale: float = 0.85  # Lifeline LoRA 影響力（0.0~1.0，0.85 為風格與構圖多樣性的最佳平衡）
     num_steps: int = 0       # 推論步數（0=自動計算）
     guidance_scale: float = 0.0  # Guidance（0=自動計算）
 
@@ -64,7 +64,7 @@ def load_model():
         print(f"🎨 Loading Lifeline LoRA weights from: {LORA_PATH}")
         pipe.load_lora_weights(LORA_PATH, adapter_name="lifeline", use_safetensors=True)
         # 初始設定 adapters
-        pipe.set_adapters(["lcm", "lifeline"], adapter_weights=[1.0, 0.4])
+        pipe.set_adapters(["lcm", "lifeline"], adapter_weights=[1.0, 0.85])
 
         # Apple M4 Max MPS 加速
         if torch.backends.mps.is_available():
@@ -127,10 +127,10 @@ def ai_generation(vector: EmotionVector) -> str:
 
     negative_prompt = "photorealistic, 3d render, text, watermark, blurry, low quality"
 
-    # 推論步數：使用者指定 > 自動計算 (LCM 加速，只需 4~7 步！)
-    num_steps = vector.num_steps if vector.num_steps > 0 else int(4 + vector.intensity * 3)
-    # Guidance scale：使用者指定 > 自動計算 (LCM 需要低 CFG，通常 1.0~2.0)
-    guidance = vector.guidance_scale if vector.guidance_scale > 0 else 1.0 + vector.intensity * 1.0
+    # 推論步數：使用者指定 > 自動計算 (LCM 加速，8~12 步確保 Lifeline 紋理完整成形)
+    num_steps = vector.num_steps if vector.num_steps > 0 else int(8 + vector.intensity * 4)
+    # Guidance scale：使用者指定 > 自動計算 (2.0~4.0 讓 LoRA 風格充分表達)
+    guidance = vector.guidance_scale if vector.guidance_scale > 0 else 2.0 + vector.intensity * 2.0
     # LoRA scale
     lora_scale = max(0.0, min(1.0, vector.lora_scale))
     
