@@ -28,7 +28,7 @@ echo "正在使用 uv 極速安裝相依套件 (Mac MPS 專用)..."
 # 解除牽制
 python3 -c "import re; bad=['tensorflow', 'xformers', 'bitsandbytes']; open('req_clean.txt', 'w').writelines([re.split(r'[=<>~]', line)[0]+'\n' for line in open('requirements_macos_arm64.txt') if not any(b in line for b in bad)])"
 
-uv pip install torch torchvision torchaudio --upgrade
+uv pip install torch torchvision --upgrade
 uv pip install -r req_clean.txt --index-strategy unsafe-best-match
 uv pip install accelerate transformers diffusers safetensors einops huggingface_hub typing_extensions scipy --index-strategy unsafe-best-match
 

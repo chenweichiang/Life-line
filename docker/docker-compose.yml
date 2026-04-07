@@ -38,23 +38,3 @@ services:
     environment:
       - PORT=8001
     tty: true
-
-  api_audio:
-    build:
-      context: ../api_audio_python
-      dockerfile: ../docker/Dockerfile.audio
-    container_name: life_line_audio_ai
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    volumes:
-      - ../ai_models:/models
-    ports:
-      - "8002:8002"
-    environment:
-      - PORT=8002
-    tty: true

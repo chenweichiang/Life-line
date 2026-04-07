@@ -91,7 +91,6 @@ flowchart LR
 | **Vision AI API** | `api_vision_python/` | FastAPI + SDXL + LoRA | AI 影像生成，回傳 Base64 JPEG |
 | **SVG 向量化引擎** | `api_vision_python/` | VTracer (Rust bindings) | 將 raster 影像轉為高品質 SVG |
 | **微分渲染器** | `api_vision_python/diffvg_torch.py` | 純 PyTorch | 實驗性微分向量渲染器（備援） |
-| **Audio API** | `api_audio_python/` | FastAPI + Kira | 程序化音頻生成（目前暫停） |
 | **AI 模型** | `ai_models/` | Kohya LoRA 訓練 | 訓練好的 Lifeline.safetensors |
 | **Docker** | `docker/` | Docker Compose | 容器化部署環境 |
 | **原始素材** | `source images/` | JPG | LoRA 訓練素材（已完成訓練） |

@@ -64,8 +64,6 @@ pub fn handle_ai_triggers(
                 println!("Got vision generated! Transitioning particles...");
             }
         });
-
-        // 也可以平行發送給 Audio
     }
 }
 
