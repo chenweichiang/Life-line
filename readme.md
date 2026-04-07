@@ -90,8 +90,8 @@ flowchart LR
 
 | 格式 | 生成方式 | 耗時 | 用途 |
 |------|---------|------|------|
-| **JPG (1024×1024)** | SDXL + LoRA 直接生成 | ~40s | 粒子引擎素材、網頁展示、社群分享 |
-| **SVG (7000+ paths)** | SDXL 生成 → VTracer 向量化 | ~42s | Bevy 即時動畫、無損縮放、印刷輸出 |
+| **JPG (1024×1024)** | SDXL + LCM + LoRA 直接生成 | ~20s | 粒子引擎素材、網頁展示、社群分享 |
+| **SVG (7000+ paths)** | SDXL 生成 → VTracer 向量化 | ~22s | Bevy 即時動畫、無損縮放、印刷輸出 |
 
 > [!IMPORTANT]
 > SVG 並非用微分渲染器「從零雕刻」，而是先讓 SDXL 生成完整的高品質 raster，再由 VTracer（Rust 引擎）以影像描邊演算法將其轉為貝茲曲線向量圖。這確保了 SVG 的視覺品質與 raster 完全一致。
@@ -99,11 +99,12 @@ flowchart LR
 ### 模型配置
 - **基底模型**：`stabilityai/stable-diffusion-xl-base-1.0` (SDXL)
 - **LoRA 權重**：`ai_models/loras/output/Lifeline.safetensors`
-- **LoRA Scale**：`0.4`（降低以釋放構圖多樣性，1.0 會過度強制波浪線條風格）
+- **加速引擎**：LCM-LoRA (`lcm-lora-sdxl`) 雙重 Adapter
+- **LoRA Scale**：`0.85`（最佳化平衡點，保留風格且具備高度構圖多樣性）
 - **推論後端**：Apple MPS (Metal Performance Shaders)
 - **輸出尺寸**：1024×1024
-- **推論步數**：15~30 步（隨 intensity 動態調整）
-- **Guidance Scale**：7.0~10.0（隨 intensity 動態調整）
+- **推論步數**：8~12 步（LCM 加速）
+- **Guidance Scale**：2.0~4.0（LCM 加速）
 - **VTracer 版本**：0.6.15（Rust 核心，Python bindings）
 
 ### API 端點
